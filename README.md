@@ -24,9 +24,9 @@ git clone https://github.com/medevs/auto-unsubscriber.git
 cd auto-unsubscriber
 ```
 
-2. Install required dependencies:
+2. Install required dependencies using the requirements.txt file:
 ```bash
-pip install python-dotenv beautifulsoup4 requests
+pip install -r requirements.txt
 ```
 
 ## Configuration
