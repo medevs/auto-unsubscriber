@@ -53,9 +53,13 @@ def extract_links_from_html(html_content):
     Returns:
         list: List of unsubscribe URLs found in the HTML content
     """
-    soup = BeautifulSoup(html_content, "html.parser")
-    links = [link["href"] for link in soup.find_all("a", href=True) if "unsubscribe" in link["href"].lower()]
-    return links
+    try:
+        soup = BeautifulSoup(html_content, "html.parser")
+        links = [link["href"] for link in soup.find_all("a", href=True) if "unsubscribe" in link["href"].lower()]
+        return links
+    except Exception as e:
+        print(f"Error parsing HTML content: {str(e)}")
+        return []
 
 def click_link(link):
     """
@@ -89,26 +93,42 @@ def search_for_email():
     
     # Process each email found
     for num in data:
-        _, data = mail.fetch(num, "(RFC822)")
-        msg = email.message_from_bytes(data[0][1])
-        
-        # Handle multipart messages (emails with both HTML and text content)
-        if msg.is_multipart():
-            for part in msg.walk():
-                if part.get_content_type() == "text/html":
-                    html_content = part.get_payload(decode=True).decode()
-                    links.extend(extract_links_from_html(html_content))
-        else:
-            # Handle single part messages
-            content_type = msg.get_content_type()
-            content = msg.get_payload(decode=True).decode()
+        try:
+            _, data = mail.fetch(num, "(RFC822)")
+            msg = email.message_from_bytes(data[0][1])
             
-            if content_type == "text/html":
-                links.extend(extract_links_from_html(content))
+            # Handle multipart messages (emails with both HTML and text content)
+            if msg.is_multipart():
+                for part in msg.walk():
+                    if part.get_content_type() == "text/html":
+                        try:
+                            payload = part.get_payload(decode=True)
+                            charset = part.get_content_charset() or 'utf-8'
+                            html_content = payload.decode(charset, errors='ignore')
+                            links.extend(extract_links_from_html(html_content))
+                        except Exception as e:
+                            print(f"Error processing multipart message: {str(e)}")
+                            continue
+            else:
+                # Handle single part messages
+                content_type = msg.get_content_type()
+                if content_type == "text/html":
+                    try:
+                        payload = msg.get_payload(decode=True)
+                        charset = msg.get_content_charset() or 'utf-8'
+                        content = payload.decode(charset, errors='ignore')
+                        links.extend(extract_links_from_html(content))
+                    except Exception as e:
+                        print(f"Error processing single part message: {str(e)}")
+                        continue
+        except Exception as e:
+            print(f"Error processing email: {str(e)}")
+            continue
     
     mail.logout()
-    return links
-    
+    # Remove duplicates and return
+    return list(set(links))
+
 def save_links(links):
     """
     Save the found unsubscribe links to a text file.
