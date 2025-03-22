@@ -8,13 +8,21 @@ An automated tool to help you unsubscribe from unwanted email subscriptions by a
 - 🔍 Searches for emails containing unsubscribe links
 - 🔗 Extracts unsubscribe links from HTML emails
 - 🚀 Automatically visits unsubscribe links
-- 💾 Saves all found links to a file for reference
+- 🔄 Groups links by service/company to prevent duplicates
+- 📊 Exports company names and links to CSV file
+- 📝 Saves all found links to text file for reference
+- ✅ Shows success/failure statistics for unsubscribe attempts
 
 ## Prerequisites
 
 - Python 3.6 or higher
 - Gmail account
 - Gmail App Password (if 2FA is enabled)
+- Required Python packages:
+  - python-dotenv
+  - beautifulsoup4
+  - requests
+  - tldextract
 
 ## Installation
 
@@ -24,9 +32,9 @@ git clone https://github.com/medevs/auto-unsubscriber.git
 cd auto-unsubscriber
 ```
 
-2. Install required dependencies using the requirements.txt file:
+2. Install required dependencies:
 ```bash
-pip install -r requirements.txt
+pip install python-dotenv beautifulsoup4 requests tldextract
 ```
 
 ## Configuration
@@ -35,10 +43,15 @@ pip install -r requirements.txt
 2. Add your Gmail credentials:
 ```
 EMAIL="your.email@gmail.com"
-PASSWORD="your-password"
+PASSWORD="your-app-password"
 ```
 
-Note: If you have 2-factor authentication enabled, you'll need to use an App Password instead of your regular Gmail password. You can generate one at: https://myaccount.google.com/apppasswords
+**Important**: You must use an App Password, not your regular Gmail password. Gmail requires this for security reasons.
+
+To generate an App Password:
+1. Enable 2-Step Verification: https://myaccount.google.com/security
+2. Generate an App Password: https://myaccount.google.com/apppasswords
+3. Use the generated password in your `.env` file
 
 ## Usage
 
@@ -50,15 +63,30 @@ python main.py
 The script will:
 1. Connect to your Gmail account
 2. Search for emails containing unsubscribe links
-3. Extract and visit each unsubscribe link
-4. Save all found links to `links.txt`
+3. Group links by service/company domain
+4. Visit one unsubscribe link per service
+5. Save results to both text and CSV files
 
-## Output
+## Output Files
 
-The script creates a `links.txt` file containing all discovered unsubscribe links. Each link attempt will print its status to the console:
-- Success: "Successfully visited [link]"
-- Failure: "Failed to visit [link] error code [status_code]"
-- Error: "Error with [link] [error message]"
+The script generates two output files:
+
+1. `unsubscribe_links.txt`: Contains all discovered unsubscribe links (one per line)
+2. `unsubscribe_services.csv`: Contains structured data with:
+   - Company name (extracted from domain)
+   - Domain
+   - Unsubscribe URL
+   - Number of emails found from that service
+
+## Console Output
+
+The script provides detailed console output:
+- Connection status to Gmail
+- Number of emails found and processed
+- Number of unique services identified
+- Progress of visiting each unsubscribe link
+- Success/failure status for each link
+- Summary statistics after completion
 
 ## Contributing
 
